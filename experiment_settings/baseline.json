@@ -1,5 +1,5 @@
 {
-  "gloss_dataset_name": "SREF_basic_lemma_embeddings_without_augmentation",
+  "gloss_dataset_name": "WordNet_Gloss_Corpus-AVG-bert-large-cased",
   "eval_dataset_name": "WSDEval-ALL-bert-large-cased",
   "eval_dataset_task_name": "WSD",
   "max_epochs": 15,
