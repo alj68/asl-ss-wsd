@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Projection Headsを訓練するスクリプト
+# # Script for training projection heads.
 # 
-# ## 目的
-# * gloss embeddings, context embeddingsを変形するprojection headsを訓練する
+# ## Objective
+# * Train projection heads for adapting sense and context embeddings using Attract-Repel and Self-training objectives.
 # 
-# ## タスク設定
-# * BERT encoderはfine-tuningしない．
-# * gloss embeddings, context embeddingsは計算済み．
+# ## Task configuration
+# * BERT embeddings for sense/context embedddings are precomputed.
+# * We do not fine-tune BERT encoder.
 # 
-# ## 目的関数
-# * Contrastive Loss OR Triplet Loss
-# * (optional) Max-Pooling margin Loss (候補語義を利用してgloss-context similarityを学習する)
-# * (optional) supervised alignment loss (SemCor等を利用してgloss-context alignmentを学習する)
+# ## Objectives
+# * Attract-Repel objective = Contrastive Loss
+# * Self-training objective maximum similarity Loss
+# * (optional) supervised alignment loss
 # 
-# ### Contrastive Loss OR Triplet Loss
+# ### Contrastive Loss
 # * Gloss Embeddings: wordnet_gloss_corpus.cfg_embeddings のいずれか
 # * Dataset: {xLemmaEmbeddings}Dataset -> ContrastiveLearningDataset
 # * Collate Function: ContrastiveDatasetEmbeddingsCollateFunction
@@ -74,15 +74,13 @@ from dataset import WSDTaskDataset
 
 from model import encoder
 from model import similarity
-from model.loss import ContrastiveLoss, TripletLoss
+from model.loss import ContrastiveLoss
 from model.loss_unsupervised import MaxPoolingMarginLoss
 
 def _default_configs():
     dict_default_projection_head = {
         "n_layer": 2,
-        "n_block": 6,
-        "max_l2_norm_ratio": 0.5,
-        "max_l2_norm_value": 0.5,
+        "max_l2_norm_ratio": 0.015,
         "init_zeroes": True,
         "distinguish_gloss_context_embeddings": False,
         "constraint_type": "element_wise"
@@ -91,14 +89,13 @@ def _default_configs():
     dict_defaults = {
         "cfg_contrastive_learning_dataset": {
             "semantic_relation_for_positives": "all-relations",
-            "use_taxonomy_distance_for_sampling_positives": True,
-            "num_hard_negatives": -1 # 負例に用いる同形異義語の数．-1:無制限，0:なし，N(>0):N個まで
+            "use_taxonomy_distance_for_sampling_positives": False,
+            "num_hard_negatives": 5 # The number of homonyms used as negative examples. -1: Unlimited, 0: None, N (>0): Up to N.
         },
         "cfg_gloss_projection_head": dict_default_projection_head,
         "cfg_context_projection_head": dict_default_projection_head,
         "cfg_similarity_class": {
-            "temperature": 0.1,
-            "margin": 0.5,
+            "temperature": 1/64
         },
         "cfg_max_pool_margin_loss": {
             "similarity_module": None, # default: cosine_similarity
@@ -146,15 +143,13 @@ def _parse_args(exclude_required_arguments: bool = False):
     parser.add_argument("--context_dataset_name", required=False, type=nullable_string, default=None, help="Context embeddings dataset name(s). Multiple names with comma delimiter can be specified. Specifying it enables max-pooling margin task.")
     parser.add_argument("--context_dataset_portion", required=False, type=float, default=None, help="Specifies context embeddings dataset portion. If speified, first r portion alone is used. DEFAULT: None")
     parser.add_argument("--coef_max_pool_margin_loss", required=False, type=float, default=1.0, help="Coefficient of max-pooling margin task.")
-    parser.add_argument("--sense_annotated_dataset_name", required=False, type=nullable_string, default=None, help="Sense-annotated corpus embeddings dataset name. Specifying it enables supervised alignment task.")
     parser.add_argument("--coef_supervised_alignment_loss", required=False, type=float, default=1.0, help="Coefficient of supervised alignment task.")
-    parser.add_argument("--main_loss_class_name", required=False, type=str, default="ContrastiveLoss", choices=["ContrastiveLoss", "TripletLoss", "None"],
+    parser.add_argument("--main_loss_class_name", required=False, type=str, default="ContrastiveLoss", choices=["ContrastiveLoss", "None"],
                         help="main loss class name for gloss embeddings specialization.")
     parser.add_argument("--similarity_class_name", required=False, type=str, default="CosineSimilarity", choices=["CosineSimilarity", "DotProductSimilarity", "ArcMarginProduct"],
                         help="similarity class for {contrastive, supervised alignment} tasks.")
     parser.add_argument("--use_positives_as_in_batch_negatives", required=False, type=bool, default=True, help="contrastive loss config. use positive examples as weak (=in-batch) negatives.")
     parser.add_argument("--coef_for_hard_negatives", required=False, type=float, default=1.0, help="coefficient for hard negative examples. DEFAULT: 1.0 (=uniform weighting)")
-    parser.add_argument("--triplet_loss_margin", required=False, type=float, default=0.0, help="triplet loss margin. takes affect only when main loss is triplet loss.")
     parser.add_argument("--log_every_n_steps", required=False, type=int, default=200)
     parser.add_argument("--val_check_interval", required=False, type=int, default=500)
     parser.add_argument("--gpus", required=False, type=nullable_string, default=None, help="GPU device ids. e.g., `0,3,5`")
@@ -244,6 +239,7 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
     if "kwargs_bert_embeddings_dataset" in _cfg:
         gloss_dataset = BERTLemmaEmbeddingsDataset(**_cfg)
     else:
+        # ToDo: remove them
         gloss_dataset = SREFLemmaEmbeddingsDataset(**_cfg)
 
     ## Contrastive Task Dataset
@@ -301,21 +297,6 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
             else:
                 pprint(max_pool_margin_dataset.verbose)
 
-    ## (optional) BERT Embeddings Dataset for Supervised Alignment Task
-    ## 事実上SemCor一択．
-    sense_annotated_dataset_name = args.sense_annotated_dataset_name
-    if sense_annotated_dataset_name is None:
-        supervised_alignment_dataset = None
-    elif sense_annotated_dataset_name in sense_annotated_corpus.cfg_training:
-        sense_annotated_dataset = BERTEmbeddingsDataset(**sense_annotated_corpus.cfg_training[sense_annotated_dataset_name])
-        supervised_alignment_dataset = WSDTaskDataset(bert_embeddings_dataset=sense_annotated_dataset, **cfg_task_dataset["WSD"])
-    else:
-        raise ValueError(f"invalid sense-annotated dataset name: {sense_annotated_dataset_name}")
-    if supervised_alignment_dataset is not None:
-        if verbose:
-            pprint("=== supervised gloss-context alignment task dataset ===")
-            pprint(supervised_alignment_dataset.verbose)
-
     ## Projection heads
     _encoder_classes = dict(inspect.getmembers(encoder, inspect.isclass))
 
@@ -356,8 +337,6 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
         main_loss = ContrastiveLoss(similarity_module=similarity_module,
                                     use_positives_as_in_batch_negatives=args.use_positives_as_in_batch_negatives,
                                     coef_for_hard_negatives=args.coef_for_hard_negatives)
-    elif args.main_loss_class_name == "TripletLoss":
-        main_loss = TripletLoss(margin=args.triplet_loss_margin, use_positives_as_in_batch_negatives=args.use_positives_as_in_batch_negatives)
     elif args.main_loss_class_name == "None":
         main_loss = None
     else:
@@ -372,13 +351,6 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
             max_pool_margin_loss = MaxPoolingMarginLoss(**_cfg, similarity_module=similarity_module)
         else:
             max_pool_margin_loss = MaxPoolingMarginLoss(**_cfg)
-
-    ### (optional) Supervised Gloss-Context Alignment loss
-    if supervised_alignment_dataset is None:
-        supervised_alignment_loss = None
-    else:
-        warnings.warn(f"We will enable supervised gloss-context alignment loss.")
-        supervised_alignment_loss = ContrastiveLoss(similarity_module=similarity_module, use_positives_as_in_batch_negatives=args.use_positives_as_in_batch_negatives)
 
     ## DataLoader
     # * `shuffle=True` の場合は `BufferedShuffleDataset` でwrapする
@@ -402,12 +374,6 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
             "gloss_dataset": gloss_dataset,
             "batch_size": args.batch_size_max_pool_margin,
             "shuffle": args.shuffle_context_dataset
-        },
-        "supervised_alignment": {
-            "dataset": supervised_alignment_dataset,
-            "gloss_dataset": gloss_dataset,
-            "batch_size": args.batch_size_supervised_alignment,
-            "shuffle": args.shuffle
         }
     }
     for task_name, datasets in dict_task_and_datasets.items():
@@ -432,13 +398,12 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
     ## validation dataloaders
     val_data_loaders = {}
 
-    ### Contrastive Task
+    ### Attract-Repel objective: contrastive loss for the 5% of trainset.
     contrastive_dataset_val = Subset(contrastive_dataset, indices=list(range(int(len(contrastive_dataset)*0.05))))
     val_data_loaders["contrastive"] = custom_collate_fn.setup_data_loader(task_name="contrastive", dataset=contrastive_dataset_val,
                                                     shuffle=False, device=args.device, batch_size=args.batch_size_contrastive)
 
-    ### Supervised alignment Task
-    # Development setを使う．
+    ### Self-training objective: analyze (context, ground-truth sense) pair statistics using development set.
     val_data_loaders["supervised_alignment"] = custom_collate_fn.setup_data_loader(task_name="supervised_alignment", dataset=dev_dataset, gloss_dataset=gloss_dataset,
                                                     shuffle=False, device=args.device, batch_size=args.batch_size_supervised_alignment)
 
@@ -462,8 +427,6 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
                                      wsd_evaluation_glosses=gloss_dataset,
                                      max_pool_margin_loss=max_pool_margin_loss,
                                      coef_max_pool_margin_loss=args.coef_max_pool_margin_loss,
-                                     supervised_alignment_loss=supervised_alignment_loss,
-                                     coef_supervised_alignment_loss=args.coef_supervised_alignment_loss,
                                      model_parameter_schedulers=None,
                                      loss_parameter_schedulers=None,
                                      hparams=vars(args))

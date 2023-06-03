@@ -21,7 +21,7 @@ from dataset import WSDTaskDataset
 from dataset.gloss_embeddings import SREFLemmaEmbeddingsDataset, BERTLemmaEmbeddingsDataset
 from evaluator.wsd_knn import FrozenBERTKNNWSDTaskEvaluator
 
-from model.loss import ContrastiveLoss, TripletLoss
+from model.loss import ContrastiveLoss
 from model.loss_unsupervised import MaxPoolingMarginLoss
 from model.utils import pairwise_cosine_similarity, batch_pairwise_cosine_similarity
 from custom.optimizer import AdamWithWarmup
@@ -31,14 +31,12 @@ class FrozenBERTWSDTaskTrainer(LightningModule):
     def __init__(self,
                  gloss_projection_head: nn.Module,
                  context_projection_head: torch.nn.Module,
-                 main_loss: Union[ContrastiveLoss, TripletLoss],
+                 main_loss: Union[ContrastiveLoss],
                  optimizer_params: Dict[str, Any],
                  wsd_evaluation_dataset: Optional[WSDTaskDataset] = None,
                  wsd_evaluation_glosses: Optional[Union[SREFLemmaEmbeddingsDataset, BERTLemmaEmbeddingsDataset]] = None,
                  max_pool_margin_loss: Optional[MaxPoolingMarginLoss] = None,
                  coef_max_pool_margin_loss: float = 1.0,
-                 supervised_alignment_loss: Optional[ContrastiveLoss] = None,
-                 coef_supervised_alignment_loss: float = 1.0,
                  model_parameter_schedulers: Optional[Dict[str, Callable[[float], float]]] = None,
                  loss_parameter_schedulers: Optional[Dict[str, Callable[[float], float]]] = None,
                  hparams: Optional[Dict[str, Any]] = None
@@ -63,8 +61,6 @@ class FrozenBERTWSDTaskTrainer(LightningModule):
         self._contrastive_or_triplet_loss = main_loss
         self._max_pool_margin_loss = max_pool_margin_loss
         self._coef_max_pool_margin_loss = coef_max_pool_margin_loss
-        self._supervised_alignment_loss = supervised_alignment_loss
-        self._coef_supervised_alignment_loss = coef_supervised_alignment_loss
 
         # set optimizers
         self._optimizer_class_name = optimizer_params.pop("class_name")
@@ -204,7 +200,7 @@ class FrozenBERTWSDTaskTrainer(LightningModule):
                 if verbose:
                     print(f"{loss_name}.{property_name}: {current_value:.2f} -> {new_value:.2f}")
 
-    def _forward_contrastive_or_triplet_task(self, projection_head: nn.Module, loss_function: Union[ContrastiveLoss, TripletLoss, None],
+    def _forward_contrastive_or_triplet_task(self, projection_head: nn.Module, loss_function: Union[ContrastiveLoss, None],
                                              query, positive, hard_negatives, num_hard_negatives):
         if loss_function is None:
             return torch.tensor(0.0, dtype=torch.float, device=query.device)
@@ -217,10 +213,6 @@ class FrozenBERTWSDTaskTrainer(LightningModule):
             loss = loss_function.forward(queries=_query, positives=_positive)
         else:
             loss = loss_function.forward(queries=_query, positives=_positive, negatives=_hard_negatives, num_negative_samples=num_hard_negatives)
-
-        if loss_function.__class__.__name__ == "TripletLoss":
-            # multiply 100x so that similar scale to contrastive loss.
-            loss = loss * 100
 
         return loss
 
@@ -275,23 +267,12 @@ class FrozenBERTWSDTaskTrainer(LightningModule):
                                                                       loss_function=self._max_pool_margin_loss,
                                                                       **batch[task_name])
 
-        # (optional) supervised alignment loss
-        if self._supervised_alignment_loss is None:
-            supervised_alignment_loss = 0.0
-        else:
-            task_name = "supervised_alignment"
-            assert task_name in batch, f"you must specify '{task_name}' DataLoader."
-            supervised_alignment_loss = self._forward_supervised_alignment_task(gloss_projection_head=self._gloss_projection_head, context_projection_head=self._context_projection_head,
-                                                                                loss_function=self._supervised_alignment_loss,
-                                                                                **batch[task_name])
-
-        loss = main_loss + self._coef_max_pool_margin_loss * max_pool_margin_loss + self._coef_supervised_alignment_loss * supervised_alignment_loss
+        loss = main_loss + self._coef_max_pool_margin_loss * max_pool_margin_loss
 
         dict_losses = {
             "train_loss": loss,
             "train_loss_contrastive": main_loss,
             "train_loss_max_pool_margin": max_pool_margin_loss,
-            "train_loss_supervised_alignment": supervised_alignment_loss
         }
         self.log_dict(dict_losses)
         return loss

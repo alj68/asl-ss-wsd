@@ -2,6 +2,7 @@
   "gloss_dataset_name": "WordNet_Gloss_Corpus-AVG-bert-large-cased",
   "eval_dataset_name": "WSDEval-ALL-bert-large-cased",
   "eval_dataset_task_name": "WSD",
+  "dev_dataset_task_name": "WSD-SemEval2007",
   "max_epochs": 15,
   "log_every_n_steps": 500,
   "val_check_interval": 500,
