@@ -290,6 +290,7 @@ class BERTLemmaEmbeddingsDataset(SREFLemmaEmbeddingsDataset):
         self._index_by_lemma_and_pos = self._reindex_dataset_using_lemma_and_pos(dataset=self._dataset)
         self._index_by_lemma_key = self._reindex_dataset_using_lemma_key(dataset=self._dataset)
         self._lemma_and_pos_to_lemma_keys = self._map_lemma_and_pos_to_lemma_keys(dataset=self._dataset)
+        self._is_projected = False
 
     @classmethod
     def AVAILABLE_POOLING_METHOD(cls):
