@@ -16,7 +16,7 @@ DIR_EVALSET = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Evaluat
 DIR_EVALSET_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Evaluation_Framework/bert_embeddings/"
 
 DIR_TRAINSET = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Training_Corpora/"
-DIR_TRAINSET_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Training_Corpora/SemCor/bert_embeddings/"
+DIR_CONTEXT_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Training_Corpora/SemCor/bert_embeddings/"
 DIR_WORDNET_GLOSS_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/wordnet_gloss_corpus/bert_embeddings/"
 DIR_LOCAL = "/tmp/sakae/"
 
@@ -48,7 +48,7 @@ cfg_training = {
     "SemCor-bert-large-cased": {
         "path": pick_first_available_path(
             os.path.join(DIR_LOCAL, "bert-large-cased_SemCor.hdf5"),
-            os.path.join(DIR_TRAINSET_EMBEDDINGS, "bert-large-cased_SemCor.hdf5")
+            os.path.join(DIR_CONTEXT_EMBEDDINGS, "bert-large-cased_SemCor.hdf5")
         ),
         "padding": False,
         "max_sequence_length": None,

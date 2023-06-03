@@ -65,7 +65,7 @@ from lightning_module.trainer import FrozenBERTWSDTaskTrainer
 from lightning_module import custom_collate_fn
 
 from config_files.wsd_task import cfg_task_dataset
-from config_files import sense_annotated_corpus, raw_text_corpus, wordnet_gloss_corpus
+from config_files import sense_annotated_corpus, wordnet_gloss_corpus
 
 from dataset.contextualized_embeddings import BERTEmbeddingsDataset
 from dataset.gloss_embeddings import SREFLemmaEmbeddingsDataset, BERTLemmaEmbeddingsDataset
@@ -245,10 +245,10 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
     ## Contrastive Task Dataset
     contrastive_dataset = ContrastiveLearningDataset(gloss_dataset=gloss_dataset, **args.cfg_contrastive_learning_dataset)
     if verbose:
-        pprint("=== contrastive task dataset ===")
+        pprint("=== Attract-Repel objective dataset ===")
         pprint(contrastive_dataset.verbose)
 
-    ## (Optional) BERT Embeddings Dataset for self-training (previously written as max-pooling-margin) Task
+    ## (Optional) BERT Embeddings Dataset for self-training objective
     context_dataset_name = args.context_dataset_name
     if context_dataset_name is None:
         max_pool_margin_dataset = None
@@ -265,21 +265,6 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
                 _context_dataset = BERTEmbeddingsDataset(**sense_annotated_corpus.cfg_training[_context_dataset_name])
                 _max_pool_margin_dataset = WSDTaskDataset(bert_embeddings_dataset=_context_dataset, **cfg_task_dataset["WSD"],
                                                           max_dataset_size=args.context_dataset_portion)
-            elif _context_dataset_name in raw_text_corpus.cfg_embeddings:
-                _cfg = copy.deepcopy(raw_text_corpus.cfg_embeddings[_context_dataset_name])
-                # setup neighbor sense downsampler
-                pprint("=== Neighbor sense based context dataset sampler ===")
-                pprint(args.cfg_context_dataset_neighbor_sense_sampler)
-                path_sense_freq = _cfg.pop("path_sense_freq", None)
-                if path_sense_freq is not None:
-                    dict_filter_and_transformer = raw_text_corpus.setup_neighbor_sense_downsampler(path_sense_freq=path_sense_freq,
-                                                                                                   **args.cfg_context_dataset_neighbor_sense_sampler)
-                else:
-                    warnings.warn(f"Skip filter because neighbor sense frequency information is not available.")
-                    dict_filter_and_transformer = {}
-                _context_dataset = BERTEmbeddingsDataset(**_cfg, **dict_filter_and_transformer)
-                _max_pool_margin_dataset = WSDTaskDataset(bert_embeddings_dataset=_context_dataset, **cfg_task_dataset["TrainOnRawTextCorpus"],
-                                                          max_dataset_size=args.context_dataset_portion)
             else:
                 raise ValueError(f"invalid context dataset name: {context_dataset_name}")
             lst_max_pool_margin_datasets.append(_max_pool_margin_dataset)
@@ -290,7 +275,7 @@ def main(dict_external_args: Optional[Dict[str, Any]] = None, returned_metric: s
 
     if max_pool_margin_dataset is not None:
         if verbose:
-            pprint("=== maximum margin task dataset ===")
+            pprint("=== self-training objective dataset ===")
             if isinstance(max_pool_margin_dataset, ChainDataset):
                 for _dataset in max_pool_margin_dataset.datasets:
                     pprint(_dataset.verbose)
