@@ -95,8 +95,6 @@ def main():
         raise ValueError(f"unknown dataset name: {corpus_name}")
     print(f"# of sentences: {len(corpus)}")
 
-    quit()
-
     batch_corpus_reader = DataLoader(dataset=corpus, batch_size=BATCH_SIZE, collate_fn=lambda v: v)
 
     if args.verbose:
