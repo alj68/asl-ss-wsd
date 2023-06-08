@@ -20,6 +20,7 @@ class WordNetGlossDataset(Dataset):
                  concat_extended_examples: bool = True,
                  lemma_surface_form_lowercase: bool = False,
                  convert_adjective_to_adjective_satellite: bool = True,
+                 replicate_sref_format: bool = True,
                  lst_path_extended_examples_corpus: Optional[List[str]] = None,
                  filter_function: Optional[Union[Callable, List[Callable]]] = None,
                  description: str = "",
@@ -63,6 +64,7 @@ class WordNetGlossDataset(Dataset):
             self._filter_function = [filter_function]
 
         self._lemma_surface_form_lowercase = lemma_surface_form_lowercase
+        self._replicate_sref_format = replicate_sref_format
         self._description = description
         self._verbose = verbose
 
@@ -174,14 +176,19 @@ class WordNetGlossDataset(Dataset):
             # concat synset examples from WordNet.
             # sentences are re-tokenized using word_tokenize() function.
             raw_examples = ' '.join(synset.examples())
-            separator = ' ' if len(raw_examples) > 0 else ''
+            separator = ' ' if len(tokenized_examples) > 0 else ''
             tokenized_examples += separator + ' '.join( word_tokenize(raw_examples) )
+
             # for each lemma; append all lemmas, definition sentence and example sentences (may include augmented corpora)
             for lemma in lst_lemmas:
                 lemma_surface = utils_wordnet.lemma_to_surface_form(lemma)
+
                 tokenized_gloss_sentence = lemma_surface + ' - ' + ' , '.join(lst_lemma_surfaces) + ' - ' + tokenized_gloss
+
                 if len(tokenized_examples) > 0:
-                    tokenized_gloss_sentence += ' ' + tokenized_examples
+                    # Strictly follows SREF's implementation: https://github.com/lwmlyy/SREF/blob/master/emb_glosses.py > get_sense_data()
+                    examples_sep = '' if self._replicate_sref_format else ' '
+                    tokenized_gloss_sentence += examples_sep + tokenized_examples
                 obj_annotated_sentence = self.render_tokenized_gloss_sentence_into_annotated_sentences(
                                                     lemma=lemma,
                                                     lemma_surface_form=lemma_surface,

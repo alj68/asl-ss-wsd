@@ -13,6 +13,7 @@ cfg_gloss_corpus = {
         "target_pos": ["n","v","s","r"],
         "concat_extended_examples": False,
         "lemma_surface_form_lowercase": False,
+        "replicate_sref_format": True,
         "convert_adjective_to_adjective_satellite": True,
         "lst_path_extended_examples_corpus": None,
         "description": "WordNet Gloss corpus sense corpus used in SREF[Wang and Wang, EMNLP2020]. This corpus utilized a) WordNet lemmas and b) WordNet definition and examples."
