@@ -24,7 +24,7 @@ parser.add_argument("--path_args", "-a", required=True, type=str, help="path to 
 parser.add_argument("--repeats", "-r", required=False, type=int, default=1, help="number of repetition of the experiment.")
 parser.add_argument("--name", type=str, required=True, default=None, help="name parameter of TensorBoardLogger(). It can be handy for distinguishing experiment groups")
 parser.add_argument("--save_eval_metrics", required=False, type=nullable_string, default=None, help="save evaluation metrics to specified path with json format. if exists, appended.")
-parser.add_argument("--gpus", type=str, required=False, default=None, help="GPU ID used for optuna worker.")
+parser.add_argument("--gpus", type=str, required=False, default=None, help="GPU device ids. e.g., `0,3,5`")
 parser.add_argument("--optional_args", type=nullable_json_loads, required=False, default=None, help="optional arguments that is fed to train_projection_heads.py e.g., `{'coef_max_pool_margin_loss':1.0}`")
 parser.add_argument("--verbose", action="store_true", help="output verbosity.")
 args = parser.parse_args()
