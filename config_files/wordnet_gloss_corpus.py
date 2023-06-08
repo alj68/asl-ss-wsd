@@ -8,7 +8,6 @@ DIR_SREF_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/SRE
 
 from .sense_annotated_corpus import cfg_training
 
-# evaluation dataset for all-words WSD task
 cfg_gloss_corpus = {
     "WordNet_Gloss_Corpus": {
         "target_pos": ["n","v","s","r"],

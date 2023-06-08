@@ -39,18 +39,18 @@ def _parse_args():
 
     parser = argparse.ArgumentParser(description="Precompute {gloss,context} embeddings using BERT encoder.")
     parser.add_argument("--dataset_name", required=True, type=str, choices=["SemCor", "WordNet_Gloss_Corpus", "WSDEval-ALL"], help="Dataset name to be processed.")
-    parser.add_argument("--output_path", required=True, type=str, help="Save precomputed embeddings to the specified path with HDF5 format.")
+    parser.add_argument("--path_output", required=True, type=str, help="Save precomputed embeddings to the specified path with HDF5 format.")
 
-    parser.add_argument("--encoder_name", required=False, type=str, default="bert-large-cased", help="Encoder model name.")
+    parser.add_argument("--encoder_name", required=False, type=str, default="bert-large-cased", help="Encoder model name. DEFAULT: 'bert-large-cased'")
     parser.add_argument("--batch_size", required=False, type=int, default=128, help="minibatch size.")
-    parser.add_argument("--transformer_layers", required=False, type=str, default="-4,-3,-2,-1", help="Layers of transformer blocks to be extracted.")
+    parser.add_argument("--transformer_layers", required=False, type=str, default="-4,-3,-2,-1", help="Layers of transformer blocks to be extracted. DEFAULT: '-4,-3,-2,-1'")
     parser.add_argument("--gpus", required=False, type=nullable_string, default=None, help="GPU device ids. e.g., `0,3,5` Do not specify when you use cpu.")
     parser.add_argument("--verbose", action="store_true", help="output verbosity.")
 
     args = parser.parse_args()
 
-    if os.path.exists(args.output_path):
-        raise IOError(f"Specified file already exists: {args.output_path}")
+    if os.path.exists(args.path_output):
+        raise IOError(f"Specified file already exists: {args.path_output}")
 
     if args.gpus is not None:
         args.gpus = list(map(int, args.gpus.split(",")))
@@ -90,7 +90,7 @@ def main():
     elif corpus_name == "WSDEval-ALL":
         corpus = WSDEvaluationDataset(**cfg_evaluation[corpus_name])
     elif corpus_name == "WordNet_Gloss_Corpus":
-        corpus = WordNetGlossDataset(**cfg_training[corpus_name])
+        corpus = WordNetGlossDataset(**cfg_gloss_corpus[corpus_name])
     else:
         raise ValueError(f"unknown dataset name: {corpus_name}")
     print(f"# of sentences: {len(corpus)}")
@@ -102,7 +102,6 @@ def main():
     if args.verbose:
         record = next(iter(corpus))
         pprint(extract_words_ands_spans_from_record(record))
-
 
     # BERT encoder
     encoder = BERTEmbeddings(model_or_name=BERT_MODEL_NAME,
@@ -146,3 +145,7 @@ def main():
     print(f"processed sentences: {n_processed}")
     print(f"file path: {path_output}")
     print(f"finished. good-bye.")
+
+
+if __name__ == "__main__":
+    main()
