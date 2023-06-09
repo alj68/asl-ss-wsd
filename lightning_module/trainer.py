@@ -156,50 +156,6 @@ class FrozenBERTWSDTaskTrainer(LightningModule):
 
         return model
 
-    def _update_model_parameters(self, current_step: Optional[float] = None, verbose: bool = False):
-        if current_step is None:
-            current_step = self.current_epoch / self.trainer.max_epochs
-
-        for parameter_name, scheduler_function in self._model_parameter_schedulers.items():
-            if scheduler_function is None:
-                continue
-
-            current_value = getattr(self._gloss_projection_head, parameter_name, None)
-            if current_value is not None:
-                new_value = scheduler_function(current_step, self.current_epoch)
-                setattr(self._gloss_projection_head, parameter_name, new_value)
-
-                if verbose:
-                    print(f"{parameter_name}: {current_value:.2f} -> {new_value:.2f}")
-
-    def _update_loss_parameters(self, current_step: Optional[float] = None, verbose: bool = False):
-        if current_step is None:
-            current_step = self.current_epoch / self.trainer.max_epochs
-
-        for loss_name, dict_property_scheduler in self._loss_parameter_schedulers.items():
-            # get loss layer
-            if not loss_name.startswith("_"):
-                loss_name = "_" + loss_name
-            loss_layer = getattr(self, loss_name, None)
-            if loss_layer is None:
-                continue
-
-            # get property name and apply scheduler function
-            for property_name, scheduler_function in dict_property_scheduler.items():
-                if scheduler_function is None:
-                    continue
-
-                # check if property exists
-                if not hasattr(loss_layer, property_name):
-                    continue
-
-                current_value = getattr(loss_layer, property_name, None)
-                new_value = scheduler_function(current_step, self.current_epoch)
-                setattr(loss_layer, property_name, new_value)
-
-                if verbose:
-                    print(f"{loss_name}.{property_name}: {current_value:.2f} -> {new_value:.2f}")
-
     def _forward_contrastive_or_triplet_task(self, projection_head: nn.Module, loss_function: Union[ContrastiveLoss, None],
                                              query, positive, hard_negatives, num_hard_negatives):
         if loss_function is None:
@@ -246,10 +202,6 @@ class FrozenBERTWSDTaskTrainer(LightningModule):
 
     def training_step(self, batch: Dict[str, Dict[str, torch.Tensor]], batch_idx: int):
 
-        # current_step = self.trainer.global_step / (self.trainer.max_epochs * self.trainer.num_training_batches)
-        # self._update_model_parameters(current_step, verbose=False)
-        # self._update_loss_parameters(current_step, verbose=False)
-
         # forward computation
 
         # contrastive loss
@@ -278,8 +230,6 @@ class FrozenBERTWSDTaskTrainer(LightningModule):
         return loss
 
     def on_train_start(self) -> None:
-        # init_metrics = {metric_name:0.0 for metric_name in self.metrics.keys()}
-        # self.logger.log_hyperparams(params=self.hparams, metrics=init_metrics)
         pass
 
     def validation_step(self, batch: Dict[str, Dict[str, torch.Tensor]], batch_idx: int):
