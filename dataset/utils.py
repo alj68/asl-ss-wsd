@@ -8,12 +8,6 @@ import torch
 Array_like = Union[torch.Tensor, np.ndarray]
 
 
-def preprocessor_for_monosemous_entity_annotated_corpus(record: Dict[str, Any]):
-    lst_words = record["words"]
-    lst_entity_spans = [entity["span"] for entity in record["monosemous_entities"]]
-    return lst_words, lst_entity_spans
-
-
 def numpy_to_tensor(object: Array_like) -> torch.Tensor:
         if isinstance(object, torch.Tensor):
             return object
