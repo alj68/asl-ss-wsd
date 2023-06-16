@@ -13,10 +13,10 @@ _no_entity_sentence_filter = EmptyFilter(check_field_names=["entities"])
 from .utils import pick_first_available_path
 
 DIR_EVALSET = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Evaluation_Framework/Evaluation_Datasets/"
-DIR_EVALSET_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Evaluation_Framework/bert_embeddings/"
+DIR_EVALSET_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/semantic_specialization/bert_embeddings/"
 
 DIR_TRAINSET = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Training_Corpora/"
-DIR_CONTEXT_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Training_Corpora/SemCor/bert_embeddings/"
+DIR_CONTEXT_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/semantic_specialization/bert_embeddings/"
 DIR_WORDNET_GLOSS_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/semantic_specialization/bert_embeddings/"
 DIR_LOCAL = "/tmp/sakae/"
 
@@ -29,7 +29,7 @@ cfg_evaluation = {
         "description": "WSD Evaluation Framework dataset [Raganato+, 2017]: ALL",
     },
     "WSDEval-ALL-bert-large-cased": {
-        "path": os.path.join(DIR_EVALSET_EMBEDDINGS, "bert-large-cased_wsdeval-all.hdf5"),
+        "path": os.path.join(DIR_EVALSET_EMBEDDINGS, "bert-large-cased_WSDEval-ALL.hdf5"),
         "padding": False,
         "max_sequence_length": None,
         "filter_function":None,

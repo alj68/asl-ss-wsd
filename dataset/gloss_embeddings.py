@@ -272,6 +272,7 @@ class BERTLemmaEmbeddingsDataset(SREFLemmaEmbeddingsDataset):
 
         self._target_pos = target_pos
         self._lemma_surface_form_lowercase = lemma_surface_form_lowercase
+        self._use_first_embeddings_only = use_first_embeddings_only
         self._description = description
 
         assert pooling_method in self._AVAILABLE_POOLING_METHOD, f"invalid pooling_methov value: {pooling_method}"

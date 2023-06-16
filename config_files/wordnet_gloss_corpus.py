@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
-import os
-
-DIR_SREF_CORPUS = "/home/sakae/Windows/dataset/word_sense_disambiguation/SREF/corpus/"
-DIR_SREF_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/SREF/vectors/"
-
 from .sense_annotated_corpus import cfg_training
 
 cfg_gloss_corpus = {
@@ -21,14 +16,6 @@ cfg_gloss_corpus = {
 }
 
 cfg_embeddings = {
-    "SREF_basic_lemma_embeddings_without_augmentation": {
-        "path": os.path.join(DIR_SREF_EMBEDDINGS, "emb_glosses_gloss+examples.txt"),
-        "target_pos": ["n","v","s","r"],
-        "l2_norm": False,
-        "use_first_embeddings_only": True,
-        "lemma_surface_form_lowercase": False,
-        "description": "Basic lemma embeddings used in SREF[Wang and Wang, EMNLP2020]. This embeddings are computed without using augmented example sentences."
-    },
     "WordNet_Gloss_Corpus-AVG-bert-large-cased": {
         "kwargs_bert_embeddings_dataset": cfg_training["WordNet_Gloss_Corpus-bert-large-cased"],
         "pooling_method": "average",
