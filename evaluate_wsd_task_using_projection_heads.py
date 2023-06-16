@@ -44,10 +44,6 @@ def _parse_args():
 
     args = parser.parse_args()
 
-    if args.path_output is not None:
-        if os.path.exists(args.path_output):
-            raise IOError(f"Specified file already exists: {args.path_output}")
-
     if not os.path.exists(args.path_model_checkpoint):
         raise IOError(f"Specified file does not exist: {args.path_model_checkpoint}")
 
@@ -83,8 +79,6 @@ def main():
         print(f"we do not load projection heads: {path}")
         tup_models = (None, None)
 
-    quit()
-
     # load context embeddings of evaluation dataset.
     evalset_embeddings = BERTEmbeddingsDataset(**cfg_evaluation[args.eval_dataset_name])
     wsd_task_dataset = WSDTaskDataset(bert_embeddings_dataset=evalset_embeddings, **cfg_task_dataset["WSD"])
@@ -95,12 +89,15 @@ def main():
     # load sense embeddings used for k-NN search.
     sense_embeddings_name = args.sense_embeddings_name
     _cfg = cfg_embeddings[sense_embeddings_name]
-    if sense_embeddings_name == "":
+    if sense_embeddings_name == "WordNet_Gloss_Corpus-AVG-bert-large-cased":
         gloss_embeddings = BERTLemmaEmbeddingsDataset(**_cfg)
     elif sense_embeddings_name.startswith("SREF_"):
         gloss_embeddings = SREFLemmaEmbeddingsDataset(**_cfg)
     else:
         raise IOError(f"Unknown sense embeddings dataset name: {sense_embeddings_name}")
+
+    if args.verbose:
+        pprint(gloss_embeddings.verbose)
 
     # project sense embeddings
     gloss_projection_head = tup_models[0]
@@ -155,7 +152,7 @@ def main():
         # append metadata info
         dict_metrics["eval_dataset_name"] = args.eval_dataset_name
         dict_metrics["checkpoint"] = path
-        dict_metrics["try_again_mechanism"] = try_again_mechanism
+        dict_metrics["try_again_mechanism"] = args.try_again_mechanism
 
         mode = "a" if os.path.exists(path) else "w"
         with io.open(path, mode=mode) as ofs:
