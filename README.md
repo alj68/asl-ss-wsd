@@ -75,7 +75,7 @@
   An example usage can be found in the `train_projection_heads.sh` file.  
   Also the `--help` argument shows the role of each argument.    
   Note that the term "max pool margin task" is equivalent to the self-training objective in the paper.
-* For multiple trials at once, you can use the `batch_training_projection_heads.py` script.  
+* For multiple trials at once, you can use the `batch_train_projection_heads.py` script.  
   Use `--repeats` argument to specify the number of trials.  
   To strictly follow the experiment setting in the paper, you can specify the `./experiment_settings/baseline.json` file for `--path_args` argument.  
 * When finished training, the trained models and evaluation results (if specified) are saved as follows.
