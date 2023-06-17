@@ -23,7 +23,7 @@
 * You can choose to either download the precomputed files or compute them yourself.
 
 ### Download
-* Precomputed files can be downloaded from [our repository](https://huggingface.co/okazaki-lab/ss-wsd).  
+* Precomputed files can be downloaded from [our repository](https://huggingface.co/okazaki-lab/ss_wsd).  
 * The following files are required:
   - Sense embeddings: `bert-large-cased_WordNet_Gloss_Corpus.hdf5`
   - Context embeddings used for training projection heads: `bert-large-cased_SemCor.hdf5`
@@ -68,7 +68,7 @@
 * You can choose to either download the trained model or train it yourself.
 
 ### Download
-* The trained model `baseline.ckpt` can be downloaded from [our repository](https://huggingface.co/okazaki-lab/ss-wsd).  
+* The trained model `baseline.ckpt` can be downloaded from [our repository](https://huggingface.co/okazaki-lab/ss_wsd).  
 
 ### Train by yourself
 * For a single trial (run), you can use the `train_projection_heads.py` script.  
