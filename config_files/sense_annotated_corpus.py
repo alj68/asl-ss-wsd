@@ -7,18 +7,14 @@ from __future__ import print_function
 
 import os
 from dataset.filter import EmptyFilter, DictionaryFilter
-_no_entity_sentence_filter = EmptyFilter(check_field_names=["entities"])
-# _noun_verb_entity_selector = DictionaryFilter(includes={"pos":{"n","v"}})
-
 from .utils import pick_first_available_path
 
-DIR_EVALSET = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Evaluation_Framework/Evaluation_Datasets/"
-DIR_EVALSET_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/semantic_specialization/bert_embeddings/"
+_no_entity_sentence_filter = EmptyFilter(check_field_names=["entities"])
 
+
+DIR_EVALSET = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Evaluation_Framework/Evaluation_Datasets/"
 DIR_TRAINSET = "/home/sakae/Windows/dataset/word_sense_disambiguation/WSD_Training_Corpora/"
-DIR_CONTEXT_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/semantic_specialization/bert_embeddings/"
-DIR_WORDNET_GLOSS_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/semantic_specialization/bert_embeddings/"
-DIR_LOCAL = "/tmp/sakae/"
+DIR_EMBEDDINGS = "/home/sakae/Windows/dataset/word_sense_disambiguation/semantic_specialization/bert_embeddings/"
 
 # evaluation dataset for all-words WSD task
 cfg_evaluation = {
@@ -29,7 +25,7 @@ cfg_evaluation = {
         "description": "WSD Evaluation Framework dataset [Raganato+, 2017]: ALL",
     },
     "WSDEval-ALL-bert-large-cased": {
-        "path": os.path.join(DIR_EVALSET_EMBEDDINGS, "bert-large-cased_WSDEval-ALL.hdf5"),
+        "path": os.path.join(DIR_EMBEDDINGS, "bert-large-cased_WSDEval-ALL.hdf5"),
         "padding": False,
         "max_sequence_length": None,
         "filter_function":None,
@@ -46,19 +42,13 @@ cfg_training = {
         "description": "WSD SemCor corpora, excluding no-sense-annotated sentences.",
     },
     "SemCor-bert-large-cased": {
-        "path": pick_first_available_path(
-            os.path.join(DIR_LOCAL, "bert-large-cased_SemCor.hdf5"),
-            os.path.join(DIR_CONTEXT_EMBEDDINGS, "bert-large-cased_SemCor.hdf5")
-        ),
+        "path": os.path.join(DIR_EMBEDDINGS, "bert-large-cased_SemCor.hdf5"),
         "padding": False,
         "max_sequence_length": None,
         "description": "WSD SemCor corpora (excluding no-sense-annotated sentences) encoded by BERT-large-cased."
     },
     "WordNet_Gloss_Corpus-bert-large-cased": {
-        "path": pick_first_available_path(
-            os.path.join(DIR_LOCAL, "bert-large-cased_WordNet_Gloss_Corpus.hdf5"),
-            os.path.join(DIR_WORDNET_GLOSS_EMBEDDINGS, "bert-large-cased_WordNet_Gloss_Corpus.hdf5")
-        ),
+        "path": os.path.join(DIR_EMBEDDINGS, "bert-large-cased_WordNet_Gloss_Corpus.hdf5"),
         "padding": False,
         "max_sequence_length": None,
         "description": "WordNet Gloss corpora encoded by BERT-large-cased."
