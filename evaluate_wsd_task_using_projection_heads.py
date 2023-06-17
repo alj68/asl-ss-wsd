@@ -37,7 +37,7 @@ def _parse_args():
 
     parser.add_argument("--try_again_mechanism", action="store_true", help="Enable Try-again Mechanism [Wang and Wang, ACL2021]. You must specify '--path_coarse_sense_inventory' along with it.")
     parser.add_argument("--path_coarse_sense_inventory", required=False, type=str, default=None,
-                        help="Path to the Coarse Sense Inventory []. It is required when we enable '--try_again_emchanism' flag.")
+                        help="Path to the Coarse Sense Inventory [Lacerra et al., AAAI2020]. It is required when we enable '--try_again_emchanism' flag.")
 
     parser.add_argument("--device", required=False, type=nullable_string, default=None, help="Device id for pytorch. e.g., `cpu` . DEFAULT: None (=cpu)")
     parser.add_argument("--verbose", action="store_true", help="output verbosity.")
