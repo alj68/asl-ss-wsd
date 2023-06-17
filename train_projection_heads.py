@@ -110,12 +110,6 @@ def _default_configs():
             # "accumulate_grad_batches":None,
             # "gradient_clip_val":1.0
             "progress_bar_refresh_rate": 20
-        },
-        # Raw-text corpora based context embeddings dataset filter
-        "cfg_context_dataset_neighbor_sense_sampler": {
-            "min_freq": None,
-            "max_freq": None,
-            "enable_random_sampling": False
         }
     }
 
@@ -172,7 +166,7 @@ def _parse_args(exclude_required_arguments: bool = False):
                             help="context projection head class name. SHARED: share with gloss projection head. COPY: copy initial model parameter from gloss projection head.")
 
     lst_config_names = ("cfg_contrastive_learning_dataset", "cfg_gloss_projection_head", "cfg_context_projection_head", "cfg_similarity_class",
-                        "cfg_max_pool_margin_loss", "cfg_optimizer", "cfg_trainer", "cfg_context_dataset_neighbor_sense_sampler")
+                        "cfg_max_pool_margin_loss", "cfg_optimizer", "cfg_trainer")
     for config_name in lst_config_names:
         parser.add_argument(f"--{config_name}", required=False, type=nullable_json_loads, default=json.dumps(default_configs[config_name]))
 
@@ -196,7 +190,7 @@ def _postprocess_args(args):
     print("=== overwrite default configurations ===")
     default_configs = _default_configs()
     lst_config_names = ("cfg_contrastive_learning_dataset", "cfg_gloss_projection_head", "cfg_context_projection_head", "cfg_similarity_class",
-                        "cfg_max_pool_margin_loss", "cfg_optimizer", "cfg_trainer", "cfg_context_dataset_neighbor_sense_sampler")
+                        "cfg_max_pool_margin_loss", "cfg_optimizer", "cfg_trainer")
     for config_name in lst_config_names:
         cfg_input = args.__dict__[config_name]
         cfg_default = copy.deepcopy(default_configs[config_name])
