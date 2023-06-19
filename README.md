@@ -81,6 +81,7 @@
 * When finished training, the trained models and evaluation results (if specified) are saved as follows.
   * Trained models: `./checkpoints/{name}/version_{0:repeats}/checkpoints/last.ckpt`
   * Evaluation result: The path specified for the `--save_eval_metrics` argument.
+* NOTE: The performance may not match the results reported in the paper due to the stochastic nature of training.
 
 ## Evaluation
 * Please use the `evaluate_wsd_task_using_projection_heads.py` script to evaluate the trained model.  
