@@ -107,6 +107,6 @@
     year = "2023",
     address = "Dubrovnik, Croatia",
     publisher = "Association for Computational Linguistics",
-    pages = "3449--3462",
+    pages = "3457--3470",
 }
 ```
