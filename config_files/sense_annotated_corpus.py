@@ -12,15 +12,15 @@ from .utils import pick_first_available_path
 _no_entity_sentence_filter = EmptyFilter(check_field_names=["entities"])
 
 
-DIR_EVALSET = "Z:\\PreComputedFiles\\eval_data\\semeval2007\\"
+DIR_EVALSET = "Z:\\PreComputedFiles\\WSD_Unified_Evaluation_Datasets\\"
 DIR_TRAINSET = "Z:\\PreComputedFiles\\WSD_Training_Corpora\\"
 DIR_EMBEDDINGS ="Z:\\PreComputedFiles\\bert_embeddings\\"
 
 # evaluation dataset for all-words WSD task
 cfg_evaluation = {
     "WSDEval-ALL": {
-        "path_corpus": os.path.join(DIR_EVALSET, "semeval2007.data.xml"),
-        "path_ground_truth_labels": os.path.join(DIR_EVALSET, "semeval2007.gold.key.txt"),
+        "path_corpus": os.path.join(DIR_EVALSET, "ALL\\ALL.data.xml"),
+        "path_ground_truth_labels": os.path.join(DIR_EVALSET, "ALL\\ALL.gold.key.txt"),
         "lookup_candidate_senses": True,
         "description": "WSD Evaluation Framework dataset [Raganato+, 2017]: ALL",
     },
