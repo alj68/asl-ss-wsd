@@ -1,13 +1,13 @@
 #!/bin/sh
 
-python train_projection_heads.py \
---gloss_dataset_name="WordNet_Gloss_Corpus-AVG-bert-large-cased" \
---context_dataset_name="SemCor-bert-large-cased" \
---coef_max_pool_margin_loss=0.2 \
---gloss_projection_head_name="NormRestrictedShift" \
---context_projection_head_name="COPY" \
---cfg_contrastive_learning_dataset='{"num_hard_negatives":5}' \
---use_positives_as_in_batch_negatives=True \
---gpus="" \
---batch_size=256 \
+python train_projection_heads.py 
+--gloss_dataset_name="WordNet_Gloss_Corpus-AVG-bert-large-cased" 
+--context_dataset_name="SemCor-bert-large-cased" 
+--coef_max_pool_margin_loss=0.2 
+--gloss_projection_head_name="NormRestrictedShift" 
+--context_projection_head_name="COPY" 
+--cfg_contrastive_learning_dataset='{"num_hard_negatives":5}' 
+--use_positives_as_in_batch_negatives=True 
+--gpus="" 
+--batch_size=256 
 --max_epochs=15
